@@ -5,10 +5,11 @@ Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@
 
 /*******************************Libraries*******************************************/
 #include "Timer.h"
+#include <LiquidCrystal.h>
 
 /************************Hardware Related Macros************************************/
-#define         MG_PIN                       (0)     //define which analog input channel you are going to use
-#define         BOOL_PIN                     (2)
+#define         MG_PIN                       (1)     //define which analog input channel you are going to use
+#define         BOOL_PIN                     (2)     //define input pin to indicate when threshold is reached
 #define         BUZZER_PIN                   (3)     //define buzzer output pin
 #define         LED_PIN                      (11)    //define LED pin
 #define         DC_GAIN                      (8.5)   //define the DC gain of amplifier
@@ -24,7 +25,7 @@ Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@
 #define         ZERO_POINT_VOLTAGE           (0.394) //define the output of the sensor in volts when the concentration of CO2 is 400PPM
 #define         REACTION_VOLTGAE             (0.059) //define the voltage drop of the sensor when move the sensor from air into 1000ppm CO2
 
-/*****************************Globals***********************************************/
+/*****************************Variables********************************************/
 float           CO2Curve[3]  =  {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.602-3))};   
                                                      //two points are taken from the curve. 
                                                      //with these two points, a line is formed which is
@@ -32,6 +33,7 @@ float           CO2Curve[3]  =  {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.6
                                                      //data format:{ x, y, slope}; point1: (lg400, 0.324), point2: (lg4000, 0.280) 
                                                      //slope = ( reaction voltage ) / (log400 –log1000) 
 Timer           timer;
+LiquidCrystal   lcd(8, 9, 4, 5, 6, 7);               //pins used on the LCD panel
 /**********************************************************************************/
 
 void setup() {
@@ -45,16 +47,20 @@ void setup() {
 
     pinMode(LED_PIN, OUTPUT);                        //set pin to output
 
-    Serial.println("CLEARDATA");
-    Serial.println("LABEL,Current Time,Volts (V),CO2 Concentration (ppm),CO2 Range");              
+    lcd.begin(16, 2);              // start the LCD library
+    lcd.setCursor(0,0);
+    lcd.print("CO2 - Concentration"); 
+
+   Serial.println("CLEARDATA");
+   Serial.println("LABEL,Current Time,Volts (V),CO2 Concentration (ppm),CO2 Range");                
 }
 
-void loop(){
+void loop() {
     timer.update();
-
+    
     int percentage;
     float volts;
-   
+    
     volts = MGRead(MG_PIN);
     Serial.print("DATA,TIME,");
     Serial.print(volts);
@@ -80,7 +86,7 @@ void loop(){
 Input:   mg_pin - analog channel
 Output:  output of SEN0159
 Remarks: This function reads the output of SEN0159
-************************************************************************************/  
+************************************************************************************/ 
 float MGRead(int mg_pin) {
     int i;
     float v=0;
@@ -90,6 +96,7 @@ float MGRead(int mg_pin) {
         delay(READ_SAMPLE_INTERVAL);
     }
     v = (v/READ_SAMPLE_TIMES) *5/1024 ;
+    
     return v;  
 }
 
