@@ -8,25 +8,25 @@ Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@
 #include <LiquidCrystal.h>
 
 /************************Hardware Related Macros************************************/
-#define         MG_PIN                       (1)     //define which analog input channel you are going to use
-#define         BOOL_PIN                     (2)     //define input pin to indicate when threshold is reached
-#define         BUZZER_PIN                   (3)     //define buzzer output pin
-#define         LED_PIN                      (11)    //define LED pin
-#define         DC_GAIN                      (8.5)   //define the DC gain of amplifier
+const int   MG_PIN      = 1;     //define which analog input channel you are going to use
+const int   BOOL_PIN    = 2;     //define input pin to indicate when threshold is reached
+const int   BUZZER_PIN  = 3;     //define buzzer output pin
+const int   LED_PIN     = 11;    //define LED pin
+const float DC_GAIN     = 8.5;   //define the DC gain of amplifier
 
 /***********************Software Related Macros************************************/
-#define         READ_SAMPLE_INTERVAL         (50)    //define how many samples you are going to take in normal operation
-#define         READ_SAMPLE_TIMES            (20)    //define the time interval(in milisecond) between each samples in 
-                                                     //normal operation
-#define         BUZZER_DELAY_TIME            (1500)  //buzzer delay time in milliseconds()
+const int   READ_SAMPLE_INTERVAL  = 50;    //define how many samples you are going to take in normal operation
+const int   READ_SAMPLE_TIMES     = 20;    //define the time interval(in milisecond) between each samples in 
+                                           //normal operation
+const int   BUZZER_DELAY_TIME     = 1500;  //buzzer delay time in milliseconds()
 
 /**********************Application Related Macros**********************************/
 //These two values differ from sensor to sensor. user should derermine this value.
-#define         ZERO_POINT_VOLTAGE           (0.394) //define the output of the sensor in volts when the concentration of CO2 is 400PPM
-#define         REACTION_VOLTGAE             (0.059) //define the voltage drop of the sensor when move the sensor from air into 1000ppm CO2
+const float ZERO_POINT_VOLTAGE  = 0.394; //define the output of the sensor in volts when the concentration of CO2 is 400PPM
+const float REACTION_VOLTGAE    = 0.059; //define the voltage drop of the sensor when move the sensor from air into 1000ppm CO2
 
 /*****************************Variables********************************************/
-float           CO2Curve[3]  =  {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.602-3))};   
+float       CO2Curve[3]  =  {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.602-3))};   
                                                      //two points are taken from the curve. 
                                                      //with these two points, a line is formed which is
                                                      //"approximately equivalent" to the original curve.
@@ -51,8 +51,8 @@ void setup() {
     lcd.setCursor(0,0);
     lcd.print("CO2 - Concentration"); 
 
-   Serial.println("CLEARDATA");
-   Serial.println("LABEL,Current Time,Volts (V),CO2 Concentration (ppm),CO2 Range");                
+    Serial.println("CLEARDATA");
+    Serial.println("LABEL,Current Time,Volts (V),CO2 Concentration (ppm),CO2 Range");                
 }
 
 void loop() {
