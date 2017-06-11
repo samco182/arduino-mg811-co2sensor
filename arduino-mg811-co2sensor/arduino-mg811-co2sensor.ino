@@ -4,8 +4,8 @@ Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@
 ************************************************************************************/
 
 /*******************************Libraries*******************************************/
-#include "Timer.h"
 #include <LiquidCrystal.h>
+#include <TimedAction.h>
 
 /************************Hardware Related Macros************************************/
 const int   MG_PIN      = 1;     //define which analog input channel you are going to use
@@ -25,29 +25,32 @@ const int   BUZZER_DELAY_TIME     = 1500;  //buzzer delay time in milliseconds()
 const float ZERO_POINT_VOLTAGE  = 0.394; //define the output of the sensor in volts when the concentration of CO2 is 400PPM
 const float REACTION_VOLTGAE    = 0.059; //define the voltage drop of the sensor when move the sensor from air into 1000ppm CO2
 
+/********************************Funtion Prototypes********************************/
+void soundBuzzer();
+void blinkLED();
+
 /*****************************Variables********************************************/
-float       CO2Curve[3]  =  {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.602-3))};   
-                                                     //two points are taken from the curve. 
-                                                     //with these two points, a line is formed which is
-                                                     //"approximately equivalent" to the original curve.
-                                                     //data format:{ x, y, slope}; point1: (lg400, 0.324), point2: (lg4000, 0.280) 
-                                                     //slope = ( reaction voltage ) / (log400 –log1000) 
-Timer           timer;
-LiquidCrystal   lcd(8, 9, 4, 5, 6, 7);               //pins used on the LCD panel
+/*Two points are taken from the curve.With these two points, a line is formed which is
+"approximately equivalent" to the original curve. 
+Data format:{ x, y, slope}; point1: (lg400, 0.324), point2: (lg4000, 0.280) 
+slope = ( reaction voltage ) / (log400 –log1000)*/
+float           CO2Curve[3]      = {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.602-3))};                                                      
+boolean         ledState         = true;
+
+TimedAction     ledThread        = TimedAction(750, blinkLED);
+TimedAction     buzzerThread     = TimedAction(1500, soundBuzzer);
+LiquidCrystal   lcd(8, 9, 4, 5, 6, 7);     
 /**********************************************************************************/
 
 void setup() {
-    Serial.begin(9600);                              //UART setup, baudrate = 9600bps
-    
-    pinMode(BOOL_PIN, INPUT);                        //set pin to input
-    digitalWrite(BOOL_PIN, HIGH);                    //turn on pullup resistors
+    Serial.begin(9600);                   //UART setup, baudrate = 9600bps
 
-    pinMode(BUZZER_PIN,OUTPUT);                      //set pin to output
-    timer.every(BUZZER_DELAY_TIME, soundBuzzer);     //setup timer's every() function callback to be used
+    pinMode(BUZZER_PIN,OUTPUT);           //set pin to output
+    pinMode(LED_PIN, OUTPUT);             //set pin to output
+    pinMode(BOOL_PIN, INPUT);             //set pin to input
+    digitalWrite(BOOL_PIN, HIGH);         //turn on pullup resistors
 
-    pinMode(LED_PIN, OUTPUT);                        //set pin to output
-
-    lcd.begin(16, 2);              // start the LCD library
+    lcd.begin(16, 2);                     // start the LCD library
     lcd.setCursor(0,0);
     lcd.print("CO2 - Concentration"); 
 
@@ -56,7 +59,8 @@ void setup() {
 }
 
 void loop() {
-    timer.update();
+    buzzerThread.check();
+    ledThread.check();
     
     int percentage;
     float volts;
@@ -92,6 +96,8 @@ float MGRead(int mg_pin) {
     float v=0;
 
     for (i=0;i<READ_SAMPLE_TIMES;i++) {
+        buzzerThread.check();
+        ledThread.check();
         v += analogRead(mg_pin);
         delay(READ_SAMPLE_INTERVAL);
     }
@@ -120,11 +126,23 @@ int  MGGetPercentage(float volts, float *pcurve) {
 /******************************  soundBuzzer  **************************************
 Input:   None
 Output:  None
-Remarks: Function to be called back by timer's every() function
+Remarks: Callback function for buzzer thread to sound buzzer
 ************************************************************************************/ 
 void soundBuzzer() {
   if (digitalRead(BOOL_PIN)) {
-      timer.oscillate(LED_PIN,500,HIGH);
-      tone(BUZZER_PIN, 1000, 500);
+     tone(BUZZER_PIN, 1000, 500);
   }
 }
+
+/********************************  blinkLED  ***************************************
+Input:   None
+Output:  None
+Remarks: Callback funtion for LED thread to blink LED
+************************************************************************************/ 
+void blinkLED() {
+  if (digitalRead(BOOL_PIN)) {
+     ledState ? ledState = false : ledState = true;
+     digitalWrite(LED_PIN,ledState);
+  }
+}
+
