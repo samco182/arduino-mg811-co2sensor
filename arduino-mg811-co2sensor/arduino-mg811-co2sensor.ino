@@ -3,15 +3,21 @@ Author: Samuel Cornejo: sam.ach1990@gmail.com
 Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@sandboxelectronics.com
 ************************************************************************************/
 
+/*******************************Libraries*******************************************/
+#include "Timer.h"
+
 /************************Hardware Related Macros************************************/
 #define         MG_PIN                       (0)     //define which analog input channel you are going to use
 #define         BOOL_PIN                     (2)
+#define         BUZZER_PIN                   (3)     //define buzzer output pin
 #define         DC_GAIN                      (8.5)   //define the DC gain of amplifier
 
 /***********************Software Related Macros************************************/
 #define         READ_SAMPLE_INTERVAL         (50)    //define how many samples you are going to take in normal operation
 #define         READ_SAMPLE_TIMES            (5)     //define the time interval(in milisecond) between each samples in 
                                                      //normal operation
+#define         BUZZER_DELAY_TIME            (1500)  //buzzer delay time in milliseconds()
+
 /**********************Application Related Macros**********************************/
 //These two values differ from sensor to sensor. user should derermine this value.
 #define         ZERO_POINT_VOLTAGE           (0.394) //define the output of the sensor in volts when the concentration of CO2 is 400PPM
@@ -24,16 +30,24 @@ float           CO2Curve[3]  =  {2.602,ZERO_POINT_VOLTAGE,(REACTION_VOLTGAE/(2.6
                                                      //"approximately equivalent" to the original curve.
                                                      //data format:{ x, y, slope}; point1: (lg400, 0.324), point2: (lg4000, 0.280) 
                                                      //slope = ( reaction voltage ) / (log400 –log1000) 
+Timer           timer;
+/**********************************************************************************/
 
 void setup() {
     Serial.begin(9600);                              //UART setup, baudrate = 9600bps
+    
     pinMode(BOOL_PIN, INPUT);                        //set pin to input
     digitalWrite(BOOL_PIN, HIGH);                    //turn on pullup resistors
 
-   Serial.print("MG-811 Demostration\n");                
+    pinMode(BUZZER_PIN,OUTPUT);                      //set pin to output
+    timer.every(BUZZER_DELAY_TIME, soundBuzzer);     //setup timer's every() function callback to be used
+
+    Serial.print("MG-811 Demostration\n");                
 }
 
 void loop(){
+    timer.update();
+
     int percentage;
     float volts;
    
@@ -97,4 +111,15 @@ int  MGGetPercentage(float volts, float *pcurve) {
    } else { 
       return pow(10, ((volts/DC_GAIN)-pcurve[1])/pcurve[2]+pcurve[0]);
    }
+}
+
+/******************************  soundBuzzer  **************************************
+Input:   None
+Output:  None
+Remarks: Function to be called back by timer's every() function
+************************************************************************************/ 
+void soundBuzzer() {
+  if (digitalRead(BOOL_PIN)) {
+      tone(BUZZER_PIN, 1000, 500);
+  }
 }
