@@ -10,6 +10,7 @@ Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@
 #define         MG_PIN                       (0)     //define which analog input channel you are going to use
 #define         BOOL_PIN                     (2)
 #define         BUZZER_PIN                   (3)     //define buzzer output pin
+#define         LED_PIN                      (11)    //define LED pin
 #define         DC_GAIN                      (8.5)   //define the DC gain of amplifier
 
 /***********************Software Related Macros************************************/
@@ -41,6 +42,8 @@ void setup() {
 
     pinMode(BUZZER_PIN,OUTPUT);                      //set pin to output
     timer.every(BUZZER_DELAY_TIME, soundBuzzer);     //setup timer's every() function callback to be used
+
+    pinMode(LED_PIN, OUTPUT);                        //set pin to output
 
     Serial.print("MG-811 Demostration\n");                
 }
@@ -120,6 +123,7 @@ Remarks: Function to be called back by timer's every() function
 ************************************************************************************/ 
 void soundBuzzer() {
   if (digitalRead(BOOL_PIN)) {
+      timer.oscillate(LED_PIN,500,HIGH);
       tone(BUZZER_PIN, 1000, 500);
   }
 }
