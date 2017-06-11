@@ -15,7 +15,7 @@ Reference: Demo for MG-811 Gas Sensor Module V1.1 by Tiequan Shao: tiequan.shao@
 
 /***********************Software Related Macros************************************/
 #define         READ_SAMPLE_INTERVAL         (50)    //define how many samples you are going to take in normal operation
-#define         READ_SAMPLE_TIMES            (5)     //define the time interval(in milisecond) between each samples in 
+#define         READ_SAMPLE_TIMES            (20)    //define the time interval(in milisecond) between each samples in 
                                                      //normal operation
 #define         BUZZER_DELAY_TIME            (1500)  //buzzer delay time in milliseconds()
 
@@ -45,7 +45,8 @@ void setup() {
 
     pinMode(LED_PIN, OUTPUT);                        //set pin to output
 
-    Serial.print("MG-811 Demostration\n");                
+    Serial.println("CLEARDATA");
+    Serial.println("LABEL,Current Time,Volts (V),CO2 Concentration (ppm),CO2 Range");              
 }
 
 void loop(){
@@ -55,31 +56,24 @@ void loop(){
     float volts;
    
     volts = MGRead(MG_PIN);
-    Serial.print( "SEN0159:" );
-    Serial.print(volts); 
-    Serial.print( "V           " );
+    Serial.print("DATA,TIME,");
+    Serial.print(volts);
+    Serial.print(",");
     
     percentage = MGGetPercentage(volts,CO2Curve);
-    Serial.print("CO2:");
     if (percentage == -1) {
         Serial.print( "<400" );
+        Serial.print(",");
     } else {
         Serial.print(percentage);
+        Serial.print(",");
     }
-    Serial.print( "ppm" );  
-    Serial.print( "       Time point:" );
-    Serial.print(millis());
-    Serial.print("\n");
     
     if (digitalRead(BOOL_PIN) ){
-        Serial.print( "=====BOOL is HIGH======" );
+        Serial.println("HIGH");
     } else {
-        Serial.print( "=====BOOL is LOW======" );
+        Serial.println( "NORMAL" );
     }
-      
-    Serial.print("\n");
-    
-    delay(200);
 }
 
 /*****************************  MGRead *********************************************
